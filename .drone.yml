@@ -10,7 +10,7 @@ steps:
       GCPKEY:
         from_secret: gcpkey
     commands:
-      - echo "$GCPKEY" >> ~/keyfile.json
+      - 'echo "$GCPKEY" >> ~/keyfile.json'
       - gcloud auth activate-service-account --key-file ~/keyfile.json
       - gcloud functions deploy gleich_switch --runtime=python37 --trigger-http --project main-285019
 
