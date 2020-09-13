@@ -43,7 +43,7 @@ def get_secret(secret_name):
     response = client.access_secret_version(resource_name)
     return response.payload.data.decode('UTF-8')
 
-def handler(request):
+def gleich_switch(request):
     logging.info("started the function")
     cloud_run = googleapiclient.discovery.build('run', 'v1')
     logging.info("initalized the cloud_run")
