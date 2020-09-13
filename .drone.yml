@@ -13,7 +13,6 @@ steps:
       target:
         exclude:
           - production
-
 ---
 kind: secret
 name: gcpkey
