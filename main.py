@@ -48,7 +48,6 @@ def handler(request):
     cloud_run = googleapiclient.discovery.build('run', 'v1')
     logging.info("initalized the cloud_run")
     secret_name = get_secret("cloudflare-api-key")
-    logging.info("debug:: secret_name " + secret_name)
     if not service_exists(cloud_run, "gleich-tech"):
         svc = create_cloud_run_service(cloud_run, "gleich-tech")
         logging.info("created gleich-tech svc")
@@ -58,7 +57,4 @@ def handler(request):
     return f"function moved through successfully"
 
 if __name__ == '__main__':
-    pass
-    # cloud_run = googleapiclient.discovery.build('run', 'v1')
-    # svc = create_cloud_run_service(cloud_run)
-    # print(svc)
+    handler({})
