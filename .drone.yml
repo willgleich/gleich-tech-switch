@@ -10,13 +10,10 @@ steps:
       gcpkey:
         from_secret: gcpkey
     commands:
-      - mkdir ~/.gcloud
-      - echo $gcpkey >> ~/.gcloud/keyfile.json
-      - sleep 10000
-    when:
-      target:
-        exclude:
-          - production
+      - echo $gcpkey >> ~/keyfile.json
+      - gcloud auth activate-service-account --key-file ~/keyfile.json
+      - gcloud functions deploy gleich_switch --runtime=python37 --trigger-http --project main-285019
+
 ---
 kind: secret
 name: gcpkey
