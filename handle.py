@@ -1,9 +1,12 @@
 import googleapiclient.discovery
+import logging
 
-def create_cloud_run_service(cloud_run):
+logging.basicConfig(level=logging.INFO)
+
+def create_cloud_run_service(cloud_run, svc_name):
     body = {'apiVersion': 'serving.knative.dev/v1',
             'kind': 'Service',
-            'metadata': {'name': 'gleich-tech',
+            'metadata': {'name': svc_name,
                          'namespace': '248394897420',
                          'generation': 1},
             'spec': {'template': {'metadata': {'name': 'gleich-tech-00001-qel',
@@ -29,11 +32,19 @@ def service_exists(cloud_run, svc_name):
     return False
 
 def handler(request):
+    logging.info("started the function")
     cloud_run = googleapiclient.discovery.build('run', 'v1')
-    svc = create_cloud_run_service(cloud_run)
-    print(svc)
+    logging.info("initalized the cloud_run")
+    if not service_exists(cloud_run, "gleich-tech"):
+        svc = create_cloud_run_service(cloud_run, "gleich-tech")
+        logging.info("created gleich-tech svc")
+        print(svc)
+    else:
+        logging.info("svc gleich-tech already exists")
+    return f"function moved through successfully"
 
 if __name__ == '__main__':
-    cloud_run = googleapiclient.discovery.build('run', 'v1')
-    svc = create_cloud_run_service(cloud_run)
-    print(svc)
+    pass
+    # cloud_run = googleapiclient.discovery.build('run', 'v1')
+    # svc = create_cloud_run_service(cloud_run)
+    # print(svc)
