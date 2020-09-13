@@ -11,8 +11,8 @@ steps:
         from_secret: gcpkey
     commands:
       - echo ${DRONE_COMMIT_SHA:0:7}
-      - echo $gcpkey
-      - printenv
+      - echo $gcpkey >> ~/.gcloud/keyfile.json
+      - ls -latr ~/.gcloud/
     when:
       target:
         exclude:
@@ -22,4 +22,4 @@ kind: secret
 name: gcpkey
 get:
   path: secret/data/drone/gcp
-  name: test
+  name: keyfile.json
