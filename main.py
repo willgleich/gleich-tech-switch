@@ -1,6 +1,9 @@
 import googleapiclient.discovery
 import logging
 
+import os
+from google.cloud import secretmanager
+
 logging.basicConfig(level=logging.INFO)
 logging.getLogger('googleapicliet.discovery_cache').setLevel(logging.ERROR)
 
@@ -32,10 +35,20 @@ def service_exists(cloud_run, svc_name):
                 return True
     return False
 
+def get_secret(secret_name):
+    client = secretmanager.SecretManagerServiceClient()
+    secret_name = secret_name
+    project_id = os.environ["GCP_PROJECT"]
+    resource_name = f"projects/{project_id}/secrets/{secret_name}/versions/latest"
+    response = client.access_secret_version(resource_name)
+    return response.payload.data.decode('UTF-8')
+
 def handler(request):
     logging.info("started the function")
     cloud_run = googleapiclient.discovery.build('run', 'v1')
     logging.info("initalized the cloud_run")
+    secret_name = get_secret("cloudflare-api-key")
+    logging.info("debug:: secret_name " + secret_name)
     if not service_exists(cloud_run, "gleich-tech"):
         svc = create_cloud_run_service(cloud_run, "gleich-tech")
         logging.info("created gleich-tech svc")
