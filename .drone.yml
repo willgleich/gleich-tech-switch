@@ -4,14 +4,14 @@ type: kubernetes
 name: default
 
 steps:
-  - name: kube # building the API docker image
+  - name: serverless # building the API docker image
     image: gcr.io/cloud-builders/gcloud
     environment:
-      USERNAME:
+      gcpkey:
         from_secret: gcpkey
     commands:
       - echo ${DRONE_COMMIT_SHA:0:7}
-      - echo ${USERNAME}
+      - echo $gcpkey
       - printenv
     when:
       target:
