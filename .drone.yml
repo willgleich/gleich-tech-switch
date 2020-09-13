@@ -6,6 +6,9 @@ name: default
 steps:
   - name: kube # building the API docker image
     image: gcr.io/cloud-builders/gcloud
+    environment:
+      gcpkey:
+        from_secret: gcpkey
     commands:
       - echo ${DRONE_COMMIT_SHA:0:7}
       - echo ${gcpkey}
