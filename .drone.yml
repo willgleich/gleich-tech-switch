@@ -11,6 +11,7 @@ steps:
         from_secret: gcpkey
     commands:
       - echo ${DRONE_COMMIT_SHA:0:7}
+      - mkdir ~/.gcloud
       - echo $gcpkey >> ~/.gcloud/keyfile.json
       - ls -latr ~/.gcloud/
     when:
