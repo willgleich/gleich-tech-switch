@@ -2,6 +2,7 @@ import googleapiclient.discovery
 import logging
 
 logging.basicConfig(level=logging.INFO)
+logging.getLogger('googleapicliet.discovery_cache').setLevel(logging.ERROR)
 
 def create_cloud_run_service(cloud_run, svc_name):
     body = {'apiVersion': 'serving.knative.dev/v1',
