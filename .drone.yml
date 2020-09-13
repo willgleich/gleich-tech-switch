@@ -7,10 +7,10 @@ steps:
   - name: serverless # building the API docker image
     image: gcr.io/cloud-builders/gcloud
     environment:
-      gcpkey:
+      GCPKEY:
         from_secret: gcpkey
     commands:
-      - echo $${gcpkey} >> ~/keyfile.json
+      - echo "$GCPKEY" >> ~/keyfile.json
       - gcloud auth activate-service-account --key-file ~/keyfile.json
       - gcloud functions deploy gleich_switch --runtime=python37 --trigger-http --project main-285019
 
