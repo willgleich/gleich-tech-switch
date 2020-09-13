@@ -51,7 +51,7 @@ def handler(request):
     if not service_exists(cloud_run, "gleich-tech"):
         svc = create_cloud_run_service(cloud_run, "gleich-tech")
         logging.info("created gleich-tech svc")
-        print(svc)
+        # print(svc)
     else:
         logging.info("svc gleich-tech already exists")
     return f"function moved through successfully"
