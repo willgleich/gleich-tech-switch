@@ -21,7 +21,7 @@ class cloud_run_service(object):
                 'metadata': {'name': self.service_name,
                              'namespace': '248394897420',
                              'generation': 1},
-                'spec': {'template': {'metadata': {'name': 'gleich-tech-00001-qel',
+                'spec': {'template': {'metadata': {'name': f"{self.service_name}-00001-qel",
                                                    'annotations': {'run.googleapis.com/client-name': 'cloud-console',
                                                                    'autoscaling.knative.dev/maxScale': '1000'}},
                                       'spec': {'containerConcurrency': 80,
@@ -32,11 +32,11 @@ class cloud_run_service(object):
                                                                'ports': [{'containerPort': 8080}]}]}},
                          'traffic': [{'percent': 100, 'latestRevision': True}]}}
         return self.cloud_run.projects().locations().services().create(
-            parent=f"projects/{self.project}/locations/us-west1", body=body).execute()
+            parent=f"projects/{self.project}/locations/{self.location}", body=body).execute()
 
     def delete(self):
         return self.cloud_run.projects().locations().services().delete(
-            name=f"projects/{self.project}/locations/us-west1/services/" + self.service_name).execute()
+            name=f"projects/{self.project}/locations/{self.location}/services/" + self.service_name).execute()
 
     def exists(self):
         r = self.cloud_run.projects().locations().services().list(
@@ -53,13 +53,23 @@ class cloud_run_service(object):
             resource=f"projects/{self.project}/locations/{self.location}/services/{self.service_name}",
             body=policy).execute()
 
+    def attach_domain(self, domain_name):
+        body = {"metadata": {
+            "name": domain_name},
+            "spec": {
+                "routeName": self.service_name,
+            },
+            "apiVersion": "domains.cloudrun.com/v1",
+            "kind": "DomainMapping"
+        }
+        self.cloud_run().projects().locations().domainmappings().create(parent=f"projects/{self.project}/locations/{self.location}", body=body).execute()
 
 def get_secret(secret_name):
     client = secretmanager.SecretManagerServiceClient()
     secret_name = secret_name
     project_id = os.environ["GCP_PROJECT"]
     resource_name = f"projects/{project_id}/secrets/{secret_name}/versions/latest"
-    response = client.access_secret_version(resource_name)
+    response = client.access_secret_version(name=resource_name)
     return response.payload.data.decode('UTF-8')
 
 
@@ -72,6 +82,7 @@ def gleich_switch(request):
         svc = gleich_tech.create("gcr.io/main-285019/resume")
         logging.info("created gleich-tech svc")
         gleich_tech.allow_unauthenticated()
+        gleich_tech.attach_domain("william.gleich.tech")
     else:
         logging.info("svc gleich-tech already exists")
     return f"function moved through successfully"
