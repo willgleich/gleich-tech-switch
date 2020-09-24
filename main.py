@@ -62,7 +62,8 @@ class cloud_run_service(object):
             "apiVersion": "domains.cloudrun.com/v1",
             "kind": "DomainMapping"
         }
-        self.cloud_run().projects().locations().domainmappings().create(parent=f"projects/{self.project}/locations/{self.location}", body=body).execute()
+        self.cloud_run.projects().locations().domainmappings().create(parent=f"projects/{self.project}/locations/{self.location}",
+                                                                 body=body).execute()
 
 def get_secret(secret_name):
     client = secretmanager.SecretManagerServiceClient()
