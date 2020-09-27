@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO)
 logging.getLogger('googleapicliet.discovery_cache').setLevel(logging.ERROR)
 
 
-class cloud_run_service(object):
+class CloudRunService(object):
     def __init__(self, service_name, project, location):
         self.service_name = service_name
         self.project = project
@@ -36,7 +36,7 @@ class cloud_run_service(object):
 
     def delete(self):
         return self.cloud_run.projects().locations().services().delete(
-            name=f"projects/{self.project}/locations/{self.location}/services/" + self.service_name).execute()
+            name=f"projects/{self.project}/locations/{self.location}/services/{self.service_name}").execute()
 
     def exists(self):
         r = self.cloud_run.projects().locations().services().list(
@@ -53,6 +53,16 @@ class cloud_run_service(object):
             resource=f"projects/{self.project}/locations/{self.location}/services/{self.service_name}",
             body=policy).execute()
 
+    def disallow_unauthenticated(self):
+        policy = self.cloud_run.projects().locations().services().getIamPolicy(
+            resource=f"projects/{self.project}/locations/{self.location}/services/{self.service_name}").execute()
+        #List comp to filter out any rules targeting ['allUsers']
+        policy['bindings'] = [x for x in policy['bindings'] if not x['members'] == ['allUsers']]
+        policy = {"policy": policy}
+        self.cloud_run.projects().locations().services().setIamPolicy(
+            resource=f"projects/{self.project}/locations/{self.location}/services/{self.service_name}",
+            body=policy).execute()
+
     def attach_domain(self, domain_name):
         body = {"metadata": {
             "name": domain_name},
@@ -62,7 +72,8 @@ class cloud_run_service(object):
             "apiVersion": "domains.cloudrun.com/v1",
             "kind": "DomainMapping"
         }
-        self.cloud_run().projects().locations().domainmappings().create(parent=f"projects/{self.project}/locations/{self.location}", body=body).execute()
+        self.cloud_run.projects().locations().domainmappings().create(
+            parent=f"projects/{self.project}/locations/{self.location}", body=body).execute()
 
 def get_secret(secret_name):
     client = secretmanager.SecretManagerServiceClient()
@@ -74,15 +85,18 @@ def get_secret(secret_name):
 
 
 def gleich_switch(request):
-    gleich_tech = cloud_run_service("gleich-tech", "248394897420", "us-west1")
+    gleich_tech = CloudRunService("gleich-tech", "248394897420", "us-west1")
     logging.info("started the function")
     logging.info("initalized the cloud_run")
     secret_name = get_secret("cloudflare-api-key")
     if not gleich_tech.exists():
-        svc = gleich_tech.create("gcr.io/main-285019/resume")
+        gleich_tech.create("gcr.io/main-285019/resume")
         logging.info("created gleich-tech svc")
         gleich_tech.allow_unauthenticated()
-        gleich_tech.attach_domain("william.gleich.tech")
+        logging.info("set permissions on gleich-tech svc")
+        domain = "will.iam.gleich.tech"
+        gleich_tech.attach_domain(domain)
+        logging.info(f"{domain} attached without error")
     else:
         logging.info("svc gleich-tech already exists")
     return f"function moved through successfully"
