@@ -1,6 +1,6 @@
 import googleapiclient.discovery
 import logging
-
+import CloudFlare
 import os
 from google.cloud import secretmanager
 
@@ -84,11 +84,36 @@ def get_secret(secret_name):
     return response.payload.data.decode('UTF-8')
 
 
+def get_cloudflare_zone_id(cf, domain_name):
+    zones = cf.zones.get(params = {'per_page':100})
+    for zone in zones:
+        if domain_name == zone['name']:
+            return zone['id']
+    return None
+
+def create_page_rule(cf, zone_id):
+    new_rule = {'targets': [{'target': 'url',
+                             'constraint': {'operator': 'matches', 'value': 'will.gleich.tech/*'}}],
+                'actions': [{'id': 'forwarding_url',
+                             'value': {'url': 'https://will.iam.gleich.tech', 'status_code': 302}}],
+                'priority': 2,
+                'status': 'active'}
+    return cf.zones.pagerules.post(zone_id, data=new_rule)
+
+def delete_page_rule(cf, zone_id):
+    for rule in cf.zones.pagerules.get(zone_id):
+        if rule['targets'][0]['constraint']['value'].startswith("will.gleich.tech"):
+            return cf.zones.pagerules.delete(zone_id, rule['id'])
+    return None
+
+
+
 def gleich_switch(request):
-    gleich_tech = CloudRunService("gleich-tech", "248394897420", "us-west1")
+    logging.info(f"REQUEST_BODY: {request}")
+    project_id = os.environ["GCP_PROJECT"]
+    gleich_tech = CloudRunService("gleich-tech", project_id, "us-west1")
     logging.info("started the function")
     logging.info("initalized the cloud_run")
-    secret_name = get_secret("cloudflare-api-key")
     if not gleich_tech.exists():
         gleich_tech.create("gcr.io/main-285019/resume")
         logging.info("created gleich-tech svc")
@@ -97,6 +122,11 @@ def gleich_switch(request):
         domain = "will.iam.gleich.tech"
         gleich_tech.attach_domain(domain)
         logging.info(f"{domain} attached without error")
+        #Cloudflare section
+        cf = CloudFlare.CloudFlare(token=get_secret("cloudflare-api-key"))
+        zone_id = get_cloudflare_zone_id(cf, "gleich.tech")
+        create_page_rule(cf, zone_id)
+        logging.info(f"attached page rule")
     else:
         logging.info("svc gleich-tech already exists")
     return f"function moved through successfully"
