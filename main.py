@@ -109,7 +109,7 @@ def delete_page_rule(cf, zone_id):
 
 
 def gleich_switch(request):
-    logging.info(f"REQUEST_BODY: {request}")
+    logging.info(f"REQUEST_BODY: {request.get_json()}")
     project_id = os.environ["GCP_PROJECT"]
     gleich_tech = CloudRunService("gleich-tech", project_id, "us-west1")
     logging.info("started the function")
