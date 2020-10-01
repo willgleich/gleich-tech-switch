@@ -12,7 +12,7 @@ steps:
     commands:
       - 'echo "$GCPKEY" >> ~/keyfile.json'
       - gcloud auth activate-service-account --key-file ~/keyfile.json
-      - gcloud functions deploy gleich_switch --runtime=python37 --trigger-http --project main-285019
+      - gcloud functions deploy gleich_switch --runtime=python37 --project main-285019 --trigger-topic=gleich-tech
 
 ---
 kind: secret

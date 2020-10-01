@@ -1,7 +1,8 @@
 import googleapiclient.discovery
 import logging
-import CloudFlare
+import base64
 import os
+import CloudFlare
 from google.cloud import secretmanager
 
 logging.basicConfig(level=logging.INFO)
@@ -108,8 +109,9 @@ def delete_page_rule(cf, zone_id):
 
 
 
-def gleich_switch(request):
-    logging.info(f"REQUEST_BODY: {request.get_json()}")
+def gleich_switch(event, context):
+    pubsub_message = base64.b64decode(event['data']).decode('utf-8')
+    logging.info(f"REQUEST_BODY: {pubsub_message}")
     project_id = os.environ["GCP_PROJECT"]
     gleich_tech = CloudRunService("gleich-tech", project_id, "us-west1")
     logging.info("started the function")
