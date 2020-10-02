@@ -124,15 +124,15 @@ def gleich_switch(event, context):
         domain = "will.iam.gleich.tech"
         gleich_tech.attach_domain(domain)
         logging.info(f"{domain} attached without error")
-        # #Cloudflare section
-        # cf = CloudFlare.CloudFlare(token=get_secret("cloudflare-api-key"))
-        # zone_id = get_cloudflare_zone_id(cf, "gleich.tech")
-        # create_page_rule(cf, zone_id)
-        # logging.info(f"attached page rule")
+        #Cloudflare section
+        cf = CloudFlare.CloudFlare(token=get_secret("cloudflare-api-key"))
+        zone_id = get_cloudflare_zone_id(cf, "gleich.tech")
+        create_page_rule(cf, zone_id)
+        logging.info(f"attached page rule")
     else:
         logging.info("svc gleich-tech already exists")
     return f"function moved through successfully"
 
 
 if __name__ == '__main__':
-    gleich_switch({})
+    gleich_switch({}, None)
