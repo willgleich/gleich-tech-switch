@@ -18,5 +18,5 @@ steps:
 kind: secret
 name: gcpkey
 get:
-  path: secret/data/drone/gke
+  path: secret/data/drone/gcp
   name: keyfile.json

@@ -77,8 +77,6 @@ class CloudRunService(object):
 
         :return: response from cloud_run api
         '''
-        if not self.exists():
-            raise ValueError(f"{self.service_name} doesn't exist yet")
         return self.cloud_run.projects().locations().services().delete(
             name=f"projects/{self.project}/locations/{self.location}/services/{self.service_name}").execute()
 
@@ -91,7 +89,7 @@ class CloudRunService(object):
                     return True
         return False
 
-    @exists(True)
+    @_exists(True)
     def allow_unauthenticated(self):
         '''
         Modified the CloudRun Service permissions to allow for unauthenticated access "allUsers" to the cloudrun.invoker
@@ -102,7 +100,7 @@ class CloudRunService(object):
             resource=f"projects/{self.project}/locations/{self.location}/services/{self.service_name}",
             body=policy).execute()
 
-    @exists(True)
+    @_exists(True)
     def disallow_unauthenticated(self):
         '''
         Modified the CloudRun Service permissions to allow for unauthenticated access "allUsers" to the cloudrun.invoker
@@ -117,7 +115,7 @@ class CloudRunService(object):
             resource=f"projects/{self.project}/locations/{self.location}/services/{self.service_name}",
             body=policy).execute()
 
-    @exists(True)
+    @_exists(True)
     def attach_domain(self, domain_name):
         body = {"metadata": {
             "name": domain_name},
