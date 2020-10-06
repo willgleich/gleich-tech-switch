@@ -10,12 +10,43 @@ logging.getLogger('googleapicliet.discovery_cache').setLevel(logging.ERROR)
 
 
 class CloudRunService(object):
+    '''
+    A Class to Handle abstraction of CloudRun service operations
+    '''
+
+
     def __init__(self, service_name, project, location):
+        '''
+        :param service_name: Name of either a new or aleady existist service
+        :param project: Project name ex: main-285019
+        :param location: GCP Region
+        '''
         self.service_name = service_name
         self.project = project
         self.location = location
         self.cloud_run = googleapiclient.discovery.build('run', 'v1')
 
+
+    def _exists(flag):
+        '''
+        Decorator function to provide proper error reporting depending on whether the service exists or needs to be created
+        :return:
+        '''
+        def decorator(function):
+            def inner(self, *args, **Kwargs):
+                print(f"made it here {flag}")
+                if self.exists() == flag:
+                    function(self)
+                if flag:
+                    raise ValueError(f"ERROR :: {self.service_name} doesn't exist yet and is required for this operation"
+                                     f"It can be created using the CloudRunService.create() method")
+                else:
+                    raise ValueError(
+                        f"ERROR :: {self.service_name} exists already, can't preform operation")
+            return inner
+        return decorator
+
+    @_exists(False)
     def create(self, image):
         body = {'apiVersion': 'serving.knative.dev/v1',
                 'kind': 'Service',
@@ -35,7 +66,10 @@ class CloudRunService(object):
         return self.cloud_run.projects().locations().services().create(
             parent=f"projects/{self.project}/locations/{self.location}", body=body).execute()
 
+    @_exists(True)
     def delete(self):
+        if not self.exists():
+            raise ValueError(f"{self.service_name} doesn't exist yet")
         return self.cloud_run.projects().locations().services().delete(
             name=f"projects/{self.project}/locations/{self.location}/services/{self.service_name}").execute()
 
@@ -48,12 +82,14 @@ class CloudRunService(object):
                     return True
         return False
 
+    @exists(True)
     def allow_unauthenticated(self):
         policy = {'policy': {'bindings': [{'role': 'roles/run.invoker', 'members': ['allUsers']}]}}
         self.cloud_run.projects().locations().services().setIamPolicy(
             resource=f"projects/{self.project}/locations/{self.location}/services/{self.service_name}",
             body=policy).execute()
 
+    @exists(True)
     def disallow_unauthenticated(self):
         policy = self.cloud_run.projects().locations().services().getIamPolicy(
             resource=f"projects/{self.project}/locations/{self.location}/services/{self.service_name}").execute()
@@ -64,6 +100,7 @@ class CloudRunService(object):
             resource=f"projects/{self.project}/locations/{self.location}/services/{self.service_name}",
             body=policy).execute()
 
+    @exists(True)
     def attach_domain(self, domain_name):
         body = {"metadata": {
             "name": domain_name},
@@ -135,4 +172,7 @@ def gleich_switch(event, context):
 
 
 if __name__ == '__main__':
-    gleich_switch({}, None)
+    # gleich_switch({}, None)
+    project_id = os.environ["GCP_PROJECT"]
+    gleich_tech = CloudRunService("gleich-tech123", project_id, "us-west1")
+    gleich_tech.delete()
