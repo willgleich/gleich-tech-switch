@@ -33,9 +33,9 @@ class CloudRunService(object):
         :return:
         '''
         def decorator(function):
-            def inner(self, *args, **Kwargs):
+            def inner(self, *args, **kwargs):
                 if self.exists() == flag:
-                    function(self)
+                    function(self, *args, **kwargs)
                 if flag:
                     raise ValueError(f"ERROR :: {self.service_name} doesn't exist yet and is required for this operation"
                                      f"It can be created using the CloudRunService.create() method")
@@ -188,6 +188,28 @@ def gleich_switch(event, context):
 
 if __name__ == '__main__':
     # gleich_switch({}, None)
+    # project_id = os.environ["GCP_PROJECT"]
+    # gleich_tech = CloudRunService("gleich-tech123", project_id, "us-west1")
+    # gleich_tech.delete()
+
+
     project_id = os.environ["GCP_PROJECT"]
-    gleich_tech = CloudRunService("gleich-tech123", project_id, "us-west1")
-    gleich_tech.delete()
+    gleich_tech = CloudRunService("gleich-tech", project_id, "us-west1")
+    logging.info("started the function")
+    logging.info("initalized the cloud_run")
+    if not gleich_tech.exists():
+        gleich_tech.create("gcr.io/main-285019/resume")
+        logging.info("created gleich-tech svc")
+        gleich_tech.allow_unauthenticated()
+        logging.info("set permissions on gleich-tech svc")
+        domain = "will.iam.gleich.tech"
+        gleich_tech.attach_domain(domain)
+        logging.info(f"{domain} attached without error")
+        #Cloudflare section
+        cf = CloudFlare.CloudFlare(token=get_secret("cloudflare-api-key"))
+        zone_id = get_cloudflare_zone_id(cf, "gleich.tech")
+        create_page_rule(cf, zone_id)
+        logging.info(f"attached page rule")
+    else:
+        logging.info("svc gleich-tech already exists")
+    # return f"function moved through successfully"
