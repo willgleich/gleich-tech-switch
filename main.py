@@ -47,6 +47,12 @@ class CloudRunService(object):
 
     @_exists(False)
     def create(self, image):
+        '''
+        Creates a new service utilizing the service name, and a required docker image path
+        Docker image must be within gcr
+        :param image: string
+        :return:
+        '''
         body = {'apiVersion': 'serving.knative.dev/v1',
                 'kind': 'Service',
                 'metadata': {'name': self.service_name,
@@ -67,6 +73,10 @@ class CloudRunService(object):
 
     @_exists(True)
     def delete(self):
+        '''
+
+        :return: response from cloud_run api
+        '''
         if not self.exists():
             raise ValueError(f"{self.service_name} doesn't exist yet")
         return self.cloud_run.projects().locations().services().delete(
@@ -83,6 +93,10 @@ class CloudRunService(object):
 
     @exists(True)
     def allow_unauthenticated(self):
+        '''
+        Modified the CloudRun Service permissions to allow for unauthenticated access "allUsers" to the cloudrun.invoker
+        :return: None
+        '''
         policy = {'policy': {'bindings': [{'role': 'roles/run.invoker', 'members': ['allUsers']}]}}
         self.cloud_run.projects().locations().services().setIamPolicy(
             resource=f"projects/{self.project}/locations/{self.location}/services/{self.service_name}",
@@ -90,6 +104,10 @@ class CloudRunService(object):
 
     @exists(True)
     def disallow_unauthenticated(self):
+        '''
+        Modified the CloudRun Service permissions to allow for unauthenticated access "allUsers" to the cloudrun.invoker
+        :return:
+        '''
         policy = self.cloud_run.projects().locations().services().getIamPolicy(
             resource=f"projects/{self.project}/locations/{self.location}/services/{self.service_name}").execute()
         #List comp to filter out any rules targeting ['allUsers']
