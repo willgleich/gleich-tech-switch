@@ -34,7 +34,6 @@ class CloudRunService(object):
         '''
         def decorator(function):
             def inner(self, *args, **Kwargs):
-                print(f"made it here {flag}")
                 if self.exists() == flag:
                     function(self)
                 if flag:
