@@ -36,7 +36,7 @@ class CloudRunService(object):
             def inner(self, *args, **kwargs):
                 if self.exists() == flag:
                     function(self, *args, **kwargs)
-                if flag:
+                elif flag:
                     raise ValueError(f"ERROR :: {self.service_name} doesn't exist yet and is required for this operation"
                                      f"It can be created using the CloudRunService.create() method")
                 else:
@@ -82,7 +82,7 @@ class CloudRunService(object):
 
     def exists(self):
         r = self.cloud_run.projects().locations().services().list(
-            parent=f"projects/{self.project}/locations/us-west1").execute()
+            parent=f"projects/{self.project}/locations/{self.location}").execute()
         if "items" in r.keys():
             for run_svc in r["items"]:
                 if run_svc["metadata"]["name"] == self.service_name:
@@ -165,7 +165,7 @@ def gleich_switch(event, context):
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
     logging.info(f"REQUEST_BODY: {pubsub_message}")
     project_id = os.environ["GCP_PROJECT"]
-    gleich_tech = CloudRunService("gleich-tech", project_id, "us-west1")
+    gleich_tech = CloudRunService("gleich-tech", project_id, "us-central1")
     logging.info("started the function")
     logging.info("initalized the cloud_run")
     gleich_tech.allow_unauthenticated()
@@ -177,6 +177,16 @@ def gleich_switch(event, context):
     logging.info(f"attached page rule")
     return f"function moved through successfully"
 
+def cleanup_switch():
+    project_id = os.environ["GCP_PROJECT"]
+    gleich_tech = CloudRunService("gleich-tech", project_id, "us-central1")
+    gleich_tech.disallow_unauthenticated()
+    #Cloudflare section
+    cf = CloudFlare.CloudFlare(token=get_secret("cloudflare-api-key"))
+    zone_id = get_cloudflare_zone_id(cf, "gleich.tech")
+    logging.info("set permissions on gleich-tech svc")
+    delete_page_rule(cf, zone_id)
 
 if __name__ == '__main__':
+    cleanup_switch()
     pass
