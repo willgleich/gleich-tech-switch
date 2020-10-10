@@ -166,7 +166,7 @@ def create_gleich_tech_check_uptime(displayName):
 
 def create_gleich_tech_alert_policy(displayName, check_uptime_displayName):
     uptime_id = check_uptime_displayName.split('/')[-1]
-    body = {'displayName': 'gleich-tech-alert',
+    body = {'displayName': displayName,
        'combiner': 'OR',
        'conditions': [{'conditionThreshold': {'filter': 'metric.type="monitoring.googleapis.com/uptime_check/check_passed" resource.type="uptime_url" metric.label."check_id"="'+ uptime_id + '"',
           'comparison': 'COMPARISON_GT',
