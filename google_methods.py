@@ -1,11 +1,10 @@
-import googleapiclient
+import googleapiclient.discovery
 import logging
 
 class CloudRunService(object):
     '''
     A Class to Handle abstraction of CloudRun service operations
     '''
-
 
     def __init__(self, service_name, project, location):
         '''
@@ -17,7 +16,6 @@ class CloudRunService(object):
         self.project = project
         self.location = location
         self.cloud_run = googleapiclient.discovery.build('run', 'v1')
-
 
     def _exists(flag):
         '''
@@ -162,10 +160,10 @@ def create_gleich_tech_check_uptime(displayName):
        'period': '60s',
        'timeout': '5s'}
     resp = monitoring.projects().uptimeCheckConfigs().create(parent="projects/main-285019", body = body).execute()
-    return resp['displayName']
+    return resp['name']
 
-def create_gleich_tech_alert_policy(displayName, check_uptime_displayName):
-    uptime_id = check_uptime_displayName.split('/')[-1]
+def create_gleich_tech_alert_policy(displayName, check_uptime_name):
+    uptime_id = check_uptime_name.split('/')[-1]
     body = {'displayName': displayName,
        'combiner': 'OR',
        'conditions': [{'conditionThreshold': {'filter': 'metric.type="monitoring.googleapis.com/uptime_check/check_passed" resource.type="uptime_url" metric.label."check_id"="'+ uptime_id + '"',
@@ -181,7 +179,7 @@ def create_gleich_tech_alert_policy(displayName, check_uptime_displayName):
        'notificationChannels': ['projects/main-285019/notificationChannels/10740624598998404152',
         'projects/main-285019/notificationChannels/14761312651395586477'],
        'enabled': True}
-    ap.create(name="projects/main-285019", body=body).execute()
+    monitoring.projects().alertPolicies().create(name="projects/main-285019", body=body).execute()
 
 def create_check_and_alert(uptimeName, alertName=None):
     '''Removes check_uptime and alert_policy configuration with the matching displaynames'''
@@ -190,3 +188,8 @@ def create_check_and_alert(uptimeName, alertName=None):
     check_uptime_displayName = create_gleich_tech_check_uptime(uptimeName)
     create_gleich_tech_alert_policy(alertName, check_uptime_displayName)
     return "completed"
+
+
+if __name__ == '__main__':
+    create_check_and_alert('will.gleich.tech')
+    remove_check_and_alert('will.gleich.tech')
